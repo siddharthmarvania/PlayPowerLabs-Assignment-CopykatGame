@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CopyKat game</title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script  src="js/pixi.min.js"></script>
+<script>
+	let app;
+	let RED = 0xFF0000;
+	let GREEN = 0x00FF00;
+	let BLUE = 0x48D1CC;
+	let YELLOW = 0xFFFF00;
+	let EFFECT = 0x808000;
+	let canClick = false; 
+	let r1,r2,r3,r4;
+	let text;
+	let arr = [];
+	let computer_ans = [];
+	let col = {};
+	let player_ans = [];
+	let ans_len;
+	if(localStorage.getItem('on_load_counter'))
+	{
+		ans_len = parseInt(localStorage.getItem('on_load_counter'));
+		if(ans_len>=5)
+			ans_len = 3;
+	}
+	else
+	{
+		ans_len = 3;
+	}
+	let start;
+	const Rect_W=200,Rect_H=200;
+	window.onload = function(){
+		app = new PIXI.Application(
+			{
+				width: 800,
+				height: 800,
+				backgroundColor: 0X808080 
+			}
+		);
+		
+
+		document.body.appendChild(app.view);
+		// create the four rectangle using graphics
+		r1 = createRect(100,200,Rect_W,Rect_H,"rect01",RED);
+		r2 = createRect(350,200,Rect_W,Rect_H,"rect02",BLUE);
+		r3 = createRect(100,450,Rect_W,Rect_H,"rect03",YELLOW);
+		r4 = createRect(340,450,Rect_W,Rect_H,"rect04",GREEN);
+		arr.push(r1);
+		arr.push(r2);
+		arr.push(r3);
+		arr.push(r4);
+		col[r1.name] = RED;
+		col[r2.name] = BLUE;
+		col[r3.name] = YELLOW;
+		col[r4.name] = GREEN;
+		// creating the text field
+		text = new PIXI.Text("Remember",{fontSize: 30});
+		text.x = 260;
+		text.y = 130;
+		//adding rectangle and text field to stage
+		app.stage.addChild(text);  
+		app.stage.addChild(r1);
+		app.stage.addChild(r2);
+		app.stage.addChild(r3);
+		app.stage.addChild(r4);
+
+		// generating random sequence
+		generateSeq();
+		
+		// apply the generated sequence
+		applySeq();
+		console.log(ans_len);
+		//this is game loop
+		app.ticker.add(gameLoop);
+
+	}
+	function gameLoop(delta){
+
+		if(canClick)
+		{
+			for(i=0;i<4;i++)
+			{
+				arr[i].interactive = true;
+				arr[i].buttonMode = true;
+				arr[i].on("pointerup",pointerUp);
+				arr[i].on("pointerdown",pointerDown);
+				canClick = false;		
+			}
+		}
+		if(player_ans.length == ans_len)
+		{
+			let win = true;
+			for(i=0;i<player_ans.length;i++)
+			{
+				console.log(player_ans[i].name);
+				if(player_ans[i].name!=computer_ans[i].name)
+				win = false;
+			} 
+			if(win)
+			{
+				text.text = "You Win";
+				temp = ans_len +1;
+				console.log(temp);
+				localStorage.setItem("on_load_counter", temp);
+			}
+			else
+			{
+				text.text = "You lose";
+				localStorage.setItem("on_load_counter", ans_len);
+
+			}
+			player_ans = [];
+			location.reload();
+
+
+		}
+	}
+
+	//creating the rectangle graphics
+	function createRect(x,y,w,h,name,color)
+	{
+		let rect = new PIXI.Graphics();
+		rect.beginFill(color);
+		rect.drawRect(x,y,w,h);
+		rect.endFill();
+		rect.name = name;
+		return (rect);
+	}
+	function pointerUp()
+	{
+		this.tint = col[this.name];
+		player_ans.push(this);
+
+	}
+	function pointerDown()
+	{
+		this.tint = EFFECT;
+	}
+	// for creating the blinking effect
+	function blink1(rect, color,time) 
+	{
+  		setTimeout(function(){ rect.tint=color; }, time);
+	}
+	// for creating the blinking effects
+	function blink2(rect, color,time) 
+	{
+		//console.log(color);
+		setTimeout(function(){ rect.tint=color;}, time);
+	}
+	// for changing the status of game 
+	function changeStatus(time)
+	{
+		setTimeout(function(){ text.text="Your Turn";canClick = true;}, time)	
+	}
+	// generating the random sequence for computer
+	function generateSeq()
+	{
+		for(i=0;i<ans_len;i++)
+		{
+			x = Math.floor((Math.random() * 10) + 1)%4;
+			computer_ans.push(arr[x]);
+		}
+		//console.log(computer_ans);
+	}
+	function applySeq()
+	{
+		start = 500;
+		for(i=0;i<ans_len;i++)
+		{
+			blink1(computer_ans[i],EFFECT,start);
+			start = start + 500;
+			//console.log(i);
+			blink2(computer_ans[i],col[computer_ans[i].name],start);
+			start = start + 500;
+		}
+		changeStatus(start);
+	}
+</script>
+</head>
+<body>
+
+</body>
+</html>
